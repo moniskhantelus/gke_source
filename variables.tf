@@ -192,6 +192,16 @@ variable "node_pools_resource_labels" {
   }
 }
 
+variable "node_pools_resource_manager_tags" {
+  type        = map(map(string))
+  description = "Map of maps containing resource manager tags by node-pool name"
+
+  default = {
+    all               = {}
+    default-node-pool = {}
+  }
+}
+
 variable "node_pools_metadata" {
   type        = map(map(string))
   description = "Map of maps containing node metadata by node-pool name"
@@ -211,6 +221,16 @@ variable "node_pools_linux_node_configs_sysctls" {
   default = {
     all               = {}
     default-node-pool = {}
+  }
+}
+variable "node_pools_cgroup_mode" {
+  type        = map(string)
+  description = "Map of strings containing cgroup node config by node-pool name"
+
+  # Default is being set in variables_defaults.tf
+  default = {
+    all               = ""
+    default-node-pool = ""
   }
 }
 
@@ -446,6 +466,12 @@ variable "master_ipv4_cidr_block" {
   default     = "10.0.0.0/28"
 }
 
+variable "private_endpoint_subnetwork" {
+  type        = string
+  description = "The subnetwork to use for the hosted master network."
+  default     = null
+}
+
 variable "master_global_access_enabled" {
   type        = bool
   description = "Whether the cluster master is accessible globally (from any region) or only within the same region as the private endpoint."
@@ -551,13 +577,13 @@ variable "enable_cilium_clusterwide_network_policy" {
 }
 
 variable "security_posture_mode" {
-  description = "Security posture mode.  Accepted values are `DISABLED` and `BASIC`. Defaults to `DISABLED`."
+  description = "Security posture mode. Accepted values are `DISABLED` and `BASIC`. Defaults to `DISABLED`."
   type        = string
   default     = "DISABLED"
 }
 
 variable "security_posture_vulnerability_mode" {
-  description = "Security posture vulnerability mode.  Accepted values are `VULNERABILITY_DISABLED`, `VULNERABILITY_BASIC`, and `VULNERABILITY_ENTERPRISE`. Defaults to `VULNERABILITY_DISABLED`."
+  description = "Security posture vulnerability mode. Accepted values are `VULNERABILITY_DISABLED`, `VULNERABILITY_BASIC`, and `VULNERABILITY_ENTERPRISE`. Defaults to `VULNERABILITY_DISABLED`."
   type        = string
   default     = "VULNERABILITY_DISABLED"
 }
@@ -568,10 +594,22 @@ variable "disable_default_snat" {
   default     = false
 }
 
+variable "enable_default_node_pools_metadata" {
+  type        = bool
+  description = "Whether to enable the default node pools metadata key-value pairs such as `cluster_name` and `node_pool`"
+  default     = true
+}
+
 variable "notification_config_topic" {
   type        = string
   description = "The desired Pub/Sub topic to which notifications will be sent by GKE. Format is projects/{project}/topics/{topic}."
   default     = ""
+}
+
+variable "notification_filter_event_type" {
+  type        = list(string)
+  description = "Choose what type of notifications you want to receive. If no filters are applied, you'll receive all notification types. Can be used to filter what notifications are sent. Accepted values are UPGRADE_AVAILABLE_EVENT, UPGRADE_EVENT, and SECURITY_BULLETIN_EVENT."
+  default     = []
 }
 
 variable "deletion_protection" {
@@ -703,6 +741,20 @@ variable "stateful_ha" {
   default     = false
 }
 
+variable "ray_operator_config" {
+  type = object({
+    enabled            = bool
+    logging_enabled    = optional(bool, false)
+    monitoring_enabled = optional(bool, false)
+  })
+  description = "The Ray Operator Addon configuration for this cluster."
+  default = {
+    enabled            = false
+    logging_enabled    = false
+    monitoring_enabled = false
+  }
+}
+
 variable "timeouts" {
   type        = map(string)
   description = "Timeout for cluster operations."
@@ -737,13 +789,13 @@ variable "monitoring_observability_metrics_relay_mode" {
 
 variable "monitoring_enabled_components" {
   type        = list(string)
-  description = "List of services to monitor: SYSTEM_COMPONENTS, WORKLOADS. Empty list is default GKE configuration."
+  description = "List of services to monitor: SYSTEM_COMPONENTS, APISERVER, SCHEDULER, CONTROLLER_MANAGER, STORAGE, HPA, POD, DAEMONSET, DEPLOYMENT, STATEFULSET, KUBELET, CADVISOR and DCGM. In beta provider, WORKLOADS is supported on top of those 12 values. (WORKLOADS is deprecated and removed in GKE 1.24.) KUBELET and CADVISOR are only supported in GKE 1.29.3-gke.1093000 and above. Empty list is default GKE configuration."
   default     = []
 }
 
 variable "logging_enabled_components" {
   type        = list(string)
-  description = "List of services to monitor: SYSTEM_COMPONENTS, WORKLOADS. Empty list is default GKE configuration."
+  description = "List of services to monitor: SYSTEM_COMPONENTS, APISERVER, CONTROLLER_MANAGER, SCHEDULER, and WORKLOADS. Empty list is default GKE configuration."
   default     = []
 }
 
@@ -759,9 +811,21 @@ variable "config_connector" {
   default     = false
 }
 
+variable "enable_intranode_visibility" {
+  type        = bool
+  description = "Whether Intra-node visibility is enabled for this cluster. This makes same node pod to pod traffic visible for VPC network"
+  default     = false
+}
+
 variable "enable_l4_ilb_subsetting" {
   type        = bool
   description = "Enable L4 ILB Subsetting on the cluster"
+  default     = false
+}
+
+variable "enable_identity_service" {
+  type        = bool
+  description = "Enable the Identity Service component, which allows customers to use external identity providers with the K8S API."
   default     = false
 }
 
