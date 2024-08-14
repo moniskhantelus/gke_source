@@ -422,6 +422,36 @@ variable "cluster_resource_labels" {
 }
 
 
+variable "deploy_using_private_endpoint" {
+  type        = bool
+  description = "A toggle for Terraform and kubectl to connect to the master's internal IP address during deployment."
+  default     = false
+}
+
+variable "enable_private_endpoint" {
+  type        = bool
+  description = "Whether the master's internal IP address is used as the cluster endpoint"
+  default     = false
+}
+
+variable "enable_private_nodes" {
+  type        = bool
+  description = "Whether nodes have internal IP addresses only"
+  default     = false
+}
+
+variable "master_ipv4_cidr_block" {
+  type        = string
+  description = "The IP range in CIDR notation to use for the hosted master network. Optional for Autopilot clusters."
+  default     = "10.0.0.0/28"
+}
+
+variable "master_global_access_enabled" {
+  type        = bool
+  description = "Whether the cluster master is accessible globally (from any region) or only within the same region as the private endpoint."
+  default     = true
+}
+
 variable "dns_cache" {
   type        = bool
   description = "The status of the NodeLocal DNSCache addon."
